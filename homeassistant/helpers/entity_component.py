@@ -65,6 +65,7 @@ class EntityComponent(object):
 
                 self.entities[entity.entity_id] = entity
 
+                entity.setup()
                 entity.update_ha_state()
 
         if self.group is None and self.group_name is not None:

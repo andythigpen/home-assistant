@@ -8,7 +8,7 @@ import logging
 
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.mysensors import (
-    CONF_NODE_ID, CONF_ALIAS)
+    MyMessage, SetReq, EVENT_SET, CONF_NODE_ID, CONF_ALIAS)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,6 +25,7 @@ class MySensorNode(Entity):
 
     def __init__(self, node):
         self.node = node
+        self.attributes = {}
 
     @property
     def should_poll(self):
@@ -47,5 +48,17 @@ class MySensorNode(Entity):
     @property
     def state_attributes(self):
         """ Returns the state attributes. """
-        # TODO: include sensor data in state attributes
-        return {}
+        return self.attributes.copy()
+
+    def _handle_set(self, event):
+        """ Updates the current state of the node based on the event. """
+        msg = MyMessage(**event.data)
+        if msg.node_id != self.node[CONF_NODE_ID]:
+            return
+        var = SetReq(msg.sub_type)
+        self.attributes[var.name] = msg.payload
+        self.update_ha_state()
+
+    def setup(self):
+        """ Setup an event listener so that we can update the device state. """
+        self.hass.bus.listen(EVENT_SET, self._handle_set)

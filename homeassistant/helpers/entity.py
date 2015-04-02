@@ -69,6 +69,10 @@ class Entity(object):
         """ Returns optional state attributes. """
         return None
 
+    def setup(self):
+        """ Called when the device is initially added. """
+        pass
+
     def update(self):
         """ Retrieve latest state. """
         pass

@@ -80,6 +80,18 @@ def setup(hass, config):
     return True
 
 
+def get_sensor(node, sensorid):
+    """ Returns a sensor, given a node and sensor id. """
+    if not node.get(CONF_SENSORS):
+        node[CONF_SENSORS] = []
+    for sensor in node[CONF_SENSORS]:
+        if sensor[CONF_SENSOR_ID] == sensorid:
+            return sensor
+    sensor = {CONF_SENSOR_ID: sensorid}
+    node[CONF_SENSORS].append(sensor)
+    return sensor
+
+
 class MySensorController(object):
     """ The controller acts as a broker between the Gateway and the HA system.
         It responds to events where appropriate, and also passes events to the
@@ -177,22 +189,11 @@ class MySensorController(object):
                 return node
         return None
 
-    def _get_sensor(self, node, sensorid):
-        """ Returns a sensor, given a node and sensor id. """
-        if not node.get(CONF_SENSORS):
-            node[CONF_SENSORS] = []
-        for sensor in node[CONF_SENSORS]:
-            if sensor[CONF_SENSOR_ID] == sensorid:
-                return sensor
-        sensor = {CONF_SENSOR_ID: sensorid}
-        node[CONF_SENSORS].append(sensor)
-        return sensor
-
     def handle_presentation(self, event):
         """ Handles presentation protocol messages. """
         msg = MyMessage(**event.data)
         node = self._get_node(msg.node_id)
-        sensor = self._get_sensor(node, msg.child_id)
+        sensor = get_sensor(node, msg.child_id)
         sensor[CONF_SENSOR_VERSION] = msg.payload
         sensor[CONF_SENSOR_TYPE] = msg.sub_type
         self.save_config()
